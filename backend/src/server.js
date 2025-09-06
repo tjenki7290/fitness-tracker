@@ -6,6 +6,8 @@ import { connectDB } from "./config/db.js";
 import dotenv from "dotenv";
 import rateLimiter from "./middleware/rateLimiter.js";
 import cors from "cors";
+import path from "path";
+import { fileURLToPath } from "url";
 
 dotenv.config();
 
@@ -16,6 +18,10 @@ console.log("UPSTASH_REDIS_REST_TOKEN:", process.env.UPSTASH_REDIS_REST_TOKEN ? 
 const app = express();
 app.set('trust proxy', true); // Trust proxy for correct req.ip
 const PORT = process.env.PORT || 5001
+
+// Get __dirname equivalent for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 //middleware 
 const corsOptions = {
@@ -40,6 +46,14 @@ app.get("/api/health", (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/workouts", workoutsRoutes);
 app.use("/api/plans", plansRoutes);
+
+// Serve static files from the React app build directory
+app.use(express.static(path.join(__dirname, '../../frontend/dist')));
+
+// Handle React routing, return all requests to React app
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../../frontend/dist', 'index.html'));
+});
 
 connectDB().then(() => {
   app.listen(PORT, () => {
