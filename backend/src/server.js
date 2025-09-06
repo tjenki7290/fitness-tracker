@@ -23,6 +23,10 @@ const PORT = process.env.PORT || 5001
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Debug: Log directory structure
+console.log("__dirname:", __dirname);
+console.log("Frontend dist path:", path.join(__dirname, '../../frontend/dist'));
+
 //middleware 
 const corsOptions = {
   origin: process.env.FRONTEND_URL || 'http://localhost:5173',
@@ -48,11 +52,15 @@ app.use("/api/workouts", workoutsRoutes);
 app.use("/api/plans", plansRoutes);
 
 // Serve static files from the React app build directory
-app.use(express.static(path.join(__dirname, '../frontend/dist')));
+const frontendPath = path.join(process.cwd(), 'frontend', 'dist');
+console.log("Serving frontend from:", frontendPath);
+app.use(express.static(frontendPath));
 
 // Handle React routing, return all requests to React app
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../frontend/dist', 'index.html'));
+  const indexPath = path.join(frontendPath, 'index.html');
+  console.log("Serving index.html from:", indexPath);
+  res.sendFile(indexPath);
 });
 
 connectDB().then(() => {
