@@ -3,7 +3,7 @@ services:
     name: fitness-tracker-backend
     env: node
     plan: free
-    buildCommand: cd frontend && npm install && npm run build && cd ../backend && npm install
+    buildCommand: cd frontend && npm install && npm run build && cd .. && npm install
     startCommand: npm start
     envVars:
       - key: NODE_ENV
