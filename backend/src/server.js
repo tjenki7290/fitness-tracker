@@ -25,7 +25,9 @@ const __dirname = path.dirname(__filename);
 
 // Debug: Log directory structure
 console.log("__dirname:", __dirname);
-console.log("Frontend dist path:", path.join(__dirname, '../../frontend/dist'));
+// Calculate correct frontend path (go up from backend/src to project root, then to frontend/dist)
+const frontendPath = path.join(__dirname, '../../frontend/dist');
+console.log("Frontend dist path:", frontendPath);
 
 //middleware 
 const corsOptions = {
@@ -52,7 +54,6 @@ app.use("/api/workouts", workoutsRoutes);
 app.use("/api/plans", plansRoutes);
 
 // Serve static files from the React app build directory
-const frontendPath = path.join(process.cwd(), 'frontend', 'dist');
 console.log("Serving frontend from:", frontendPath);
 app.use(express.static(frontendPath));
 
@@ -63,13 +64,24 @@ app.get('*', (req, res) => {
   res.sendFile(indexPath);
 });
 
+// Connect to MongoDB (non-blocking in development)
 connectDB().then(() => {
   app.listen(PORT, () => {
     console.log("Server started on PORT:", PORT);
   });
 }).catch((error) => {
   console.error("Error connecting to MongoDB", error);
-  process.exit(1);
+  // In development, allow server to start even if MongoDB fails
+  // This allows frontend to work independently
+  if (process.env.NODE_ENV === 'production') {
+    process.exit(1);
+  } else {
+    console.warn("⚠️  Server starting without MongoDB connection (development mode)");
+    app.listen(PORT, () => {
+      console.log("Server started on PORT:", PORT);
+      console.log("⚠️  Note: MongoDB connection failed. API endpoints requiring DB will not work.");
+    });
+  }
 });
 
 
